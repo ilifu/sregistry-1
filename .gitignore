@@ -28,3 +28,4 @@ cronjob
 /static/js
 /static/favicon.ico
 /static/fonts
+venv
