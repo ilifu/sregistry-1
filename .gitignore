@@ -18,6 +18,7 @@ OLD
 secrets.py
 local_settings.py
 cronjob
+venv
 
 # Static #
 ##########
@@ -28,4 +29,3 @@ cronjob
 /static/js
 /static/favicon.ico
 /static/fonts
-venv
