@@ -29,17 +29,17 @@ ENABLE_BITBUCKET_AUTH=False
 
 # DOMAIN NAMES
 
-DOMAIN_NAME = "http://127.0.0.1"
-DOMAIN_NAME_HTTP = "http://127.0.0.1"
+DOMAIN_NAME = "http://154.114.37.149"
+DOMAIN_NAME_HTTP = "http://154.114.37.149"
 DOMAIN_NAKED = DOMAIN_NAME_HTTP.replace('http://','')
 
-ADMINS = (( 'vsochat', 'vsochat@gmail.com'),)
+ADMINS = (( 'jeremy', 'jeremy@idia.ac.za'),)
 MANAGERS = ADMINS
 
-HELP_CONTACT_EMAIL = 'vsochat@stanford.edu'
-HELP_INSTITUTION_SITE = 'srcc.stanford.edu'
-REGISTRY_NAME = "Tacosaurus Computing Center"
-REGISTRY_URI = "taco"
+HELP_CONTACT_EMAIL = 'jeremy@idia.ac.za'
+HELP_INSTITUTION_SITE = 'https://docs.ilifu.ac.za'
+REGISTRY_NAME = "ILIFU Computing Center"
+REGISTRY_URI = "ilifu"
 
 
 
@@ -53,6 +53,7 @@ PRIVATE_ONLY = False
 
 # Should the default for a new registry be private or public?
 DEFAULT_PRIVATE = False
+
 
 
 # DATABASE
@@ -91,13 +92,10 @@ LOGGING_SAVE_RESPONSES=True
 # Available Plugins:
 
 # - ldap_auth: Allows sregistry to authenitcate against an LDAP directory
-# - pam_auth: Allow users from (docker) host to log in
 # - globus: allows connection from sregistry to endpoints
 # - saml: authentication with SAML
 
 PLUGINS_ENABLED = [
 #    'ldap_auth',
-#    'pam_auth',
-#    'globus',
 #    'saml_auth'
 ]
