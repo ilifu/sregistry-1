@@ -3,6 +3,10 @@ version: '3.5'
 services:
   db:
     image: postgres
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - internal
 
   uwsgi:
     restart: always
@@ -17,6 +21,8 @@ services:
     links:
       - redis
       - db
+    networks:
+      - internal
 
   nginx:
     restart: always
@@ -32,12 +38,17 @@ services:
     links:
       - uwsgi
       - db
+    networks:
+      - internal
+      - external
 
   redis:
     restart: always
     image: redis:latest
     ports:
       - "6379:6379"
+    networks:
+      - internal
 
 
   worker:
@@ -47,7 +58,15 @@ services:
       - .:/code
       - ./static:/var/www/static
       - ./images:/var/www/images
-    links:
-      - redis
-      - db
+    networks:
+      - internal
+#    links:
+#      - redis
+#      - db
 
+volumes:
+  pg_data:
+
+networks:
+  internal:
+  external:
