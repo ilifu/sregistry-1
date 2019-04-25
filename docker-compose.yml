@@ -10,7 +10,9 @@ services:
 
   uwsgi:
     restart: always
-    image: vanessa/sregistry
+    # image: vanessa/sregistry
+    build:
+      context: ./sregistry
     volumes:
       - .:/code
       - ./static:/var/www/static
@@ -26,7 +28,9 @@ services:
 
   nginx:
     restart: always
-    image: vanessa/sregistry_nginx
+    # image: vanessa/sregistry_nginx
+    build:
+      context: ./nginx
     ports:
       - "80:80"
     volumes:
@@ -52,7 +56,9 @@ services:
 
 
   worker:
-    image: vanessa/sregistry
+    #image: vanessa/sregistry
+    build:
+      context: ./sregistry
     command: celery worker -A shub.celery -Q default -n default@%h -B
     volumes:
       - .:/code
