@@ -91,13 +91,16 @@ class ImageFile(models.Model):
 # UPLOADS
 ################################################################################
 
+def hex_uuid():
+    return uuid.uuid4().hex
+
 class ImageUpload(models.Model):
     ''' a base image upload to hold a file temporarily during upload
         based off of django-chunked-uploads BaseChunkedUpload model
     '''
 
     upload_id = models.CharField(max_length=32, unique=True, editable=False,
-                                 default=uuid.uuid4().hex)
+                                 default=hex_uuid)
     file = models.FileField(max_length=255, upload_to=get_upload_to)
     filename = models.CharField(max_length=255)
     offset = models.BigIntegerField(default=0)
