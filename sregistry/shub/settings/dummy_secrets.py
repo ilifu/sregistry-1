@@ -6,7 +6,12 @@
 # You must uncomment, and set SECRET_KEY to a secure random value
 # e.g. https://djskgen.herokuapp.com/
 
+# todo: Update below to read from environment variables
+
 #SECRET_KEY = 'xxxxxxxxxxxxxxxxxx'
+
+
+
 
 
 # =============================================================================
