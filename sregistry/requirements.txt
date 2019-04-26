@@ -1,7 +1,7 @@
 cython
 h5py
 uwsgi
-django>=1.11.18
+django==1.11.*
 social-auth-app-django
 social-auth-core[saml]
 python-social-auth
