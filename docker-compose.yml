@@ -65,7 +65,7 @@ services:
       context: ./sregistry
     command: celery worker -A shub.celery -Q default -n default@%h -B
     volumes:
-      - ./sregistry:/code
+      # - ./sregistry:/code
       - www_static:/var/www/static
       - singularity_images:/var/www/images
     networks:
