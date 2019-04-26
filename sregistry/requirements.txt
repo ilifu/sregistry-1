@@ -28,6 +28,7 @@ django-chosen
 opbeat
 django-hstore==1.3.5
 django-datatables-view
+SQLAlchemy
 sregistry==0.0.97
 django-gravatar2
 pygments
