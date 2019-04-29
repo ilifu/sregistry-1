@@ -1,15 +1,14 @@
-# This file, dummy_secrets, provides an example of how to configure
-# sregistry with your authentication secrets. Copy it to secrets.py and
-# configure the settings you need.
-
-# Secret Key
-# You must uncomment, and set SECRET_KEY to a secure random value
-# e.g. https://djskgen.herokuapp.com/
-
-# todo: Update below to read from environment variables
-
-#SECRET_KEY = 'xxxxxxxxxxxxxxxxxx'
-
+# This file, secrets.py, imports environment variables configured in the env file.
+# Please configure that file, using the provided env_template file.
+from os import getenv
+from .config import (
+	ENABLE_GOOGLE_AUTH,
+	ENABLE_TWITTER_AUTH,
+	ENABLE_GITHUB_AUTH,
+	ENABLE_GITLAB_AUTH,
+	ENABLE_BITBUCKET_AUTH
+)
+SECRET_KEY = getenv('SECRET_KEY')
 
 
 
@@ -47,8 +46,9 @@
 # Only required if ENABLE_GITHUB_AUTH=TRUE in config.py
 #http://psa.matiasaguirre.net/docs/backends/github.html?highlight=github
 
-#SOCIAL_AUTH_GITHUB_KEY = ''
-#SOCIAL_AUTH_GITHUB_SECRET = ''
+if ENABLE_GITHUB_AUTH:
+	SOCIAL_AUTH_GITHUB_KEY = getenv('SOCIAL_AUTH_GITHUB_KEY')
+	SOCIAL_AUTH_GITHUB_SECRET = getenv('SOCIAL_AUTH_GITHUB_SECRET')
 
 # You shouldn't actually need this if we aren't using repos
 # SOCIAL_AUTH_GITHUB_SCOPE = ["repo","user"]

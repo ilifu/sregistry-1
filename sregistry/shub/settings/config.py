@@ -7,15 +7,16 @@ Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed
 with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 '''
+from os import getenv, environ
 
 # AUTHENTICATION
 
 # Which social auths do you want to use?
-ENABLE_GOOGLE_AUTH=False
-ENABLE_TWITTER_AUTH=False
-ENABLE_GITHUB_AUTH=True
-ENABLE_GITLAB_AUTH=False
-ENABLE_BITBUCKET_AUTH=False
+ENABLE_GOOGLE_AUTH=getenv("ENABLE_GOOGLE_AUTH", default='False').lower() == 'true'
+ENABLE_TWITTER_AUTH=getenv("ENABLE_TWITTER_AUTH", default='False').lower() == 'true'
+ENABLE_GITHUB_AUTH=getenv("ENABLE_GITHUB_AUTH", default='False').lower() == 'true'
+ENABLE_GITLAB_AUTH=getenv("ENABLE_GITLAB_AUTH", default='False').lower() == 'true'
+ENABLE_BITBUCKET_AUTH=getenv("ENABLE_BITBUCKET_AUTH", default='False').lower() == 'true'
 
 # NOTE you will need to set autehtication methods up.
 # Configuration goes into secrets.py
@@ -28,18 +29,18 @@ ENABLE_BITBUCKET_AUTH=False
 
 
 # DOMAIN NAMES
-
-DOMAIN_NAME = "http://127.0.0.1"
-DOMAIN_NAME_HTTP = "http://127.0.0.1"
+ENV_DOMAIN_NAME=getenv('DOMAIN_NAME', default='127.0.0.1')
+DOMAIN_NAME = 'http://{}'.format(ENV_DOMAIN_NAME)
+DOMAIN_NAME_HTTP = 'http://{}'.format(ENV_DOMAIN_NAME)
 DOMAIN_NAKED = DOMAIN_NAME_HTTP.replace('http://','')
 
-ADMINS = (( 'vsochat', 'vsochat@gmail.com'),)
+ADMINS = (( 'dane', 'kennedy.dane@gmail.com`'),)
 MANAGERS = ADMINS
 
-HELP_CONTACT_EMAIL = 'vsochat@stanford.edu'
-HELP_INSTITUTION_SITE = 'srcc.stanford.edu'
-REGISTRY_NAME = "Tacosaurus Computing Center"
-REGISTRY_URI = "taco"
+HELP_CONTACT_EMAIL = 'support@ilifu.ac.za'
+HELP_INSTITUTION_SITE = 'docs.ilifu.ac.za'
+REGISTRY_NAME = "ilifu"
+REGISTRY_URI = "ilifu.ac.za"
 
 
 
