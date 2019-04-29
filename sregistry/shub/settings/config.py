@@ -7,7 +7,8 @@ Mozilla Public License, v. 2.0. If a copy of the MPL was not distributed
 with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 '''
-from os import getenv, environ
+from os import getenv
+from ast import literal_eval
 
 # AUTHENTICATION
 
@@ -34,13 +35,13 @@ DOMAIN_NAME = 'http://{}'.format(ENV_DOMAIN_NAME)
 DOMAIN_NAME_HTTP = 'http://{}'.format(ENV_DOMAIN_NAME)
 DOMAIN_NAKED = DOMAIN_NAME_HTTP.replace('http://','')
 
-ADMINS = (( 'dane', 'kennedy.dane@gmail.com`'),)
+ADMINS = literal_eval(getenv('ADMINS', default='(("someone", "someone@yourdomain.com"), )'))  # (( 'dane', 'kennedy.dane@gmail.com`'),)
 MANAGERS = ADMINS
 
-HELP_CONTACT_EMAIL = 'support@ilifu.ac.za'
-HELP_INSTITUTION_SITE = 'docs.ilifu.ac.za'
-REGISTRY_NAME = "ilifu"
-REGISTRY_URI = "ilifu.ac.za"
+HELP_CONTACT_EMAIL = getenv('HELP_CONTACT_EMAIL')
+HELP_INSTITUTION_SITE = getenv('HELP_INSTITUTION_SITE')
+REGISTRY_NAME = getenv('REGISTRY_NAME')
+REGISTRY_URI = getenv('REGISTRY_URI')
 
 
 

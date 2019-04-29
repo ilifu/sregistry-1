@@ -1,5 +1,12 @@
 DOMAIN_NAME=127.0.0.1
 
+ADMINS=(( 'help', 'helperMcHelpface@helphelpmchelphelp.com`'),)
+
+HELP_CONTACT_EMAIL='support@yourdomain.com'
+HELP_INSTITUTION_SITE='help.yourdomain.com'
+REGISTRY_NAME="your domain sregistry"
+REGISTRY_URI="sregistry.yourdomain.com"
+
 SECRET_KEY=CHANGEMENOW
 
 ENABLE_TWITTER_AUTH=FALSE
