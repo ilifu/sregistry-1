@@ -3,6 +3,7 @@ version: '3.5'
 services:
   db:
     image: postgres
+    env_file: env
     volumes:
       - pg_data:/var/lib/postgresql/data
     networks:
@@ -13,6 +14,7 @@ services:
     # image: vanessa/sregistry
     build:
       context: ./sregistry
+    env_file: env
     volumes:
       - ./sregistry:/code
       - www_static:/var/www/static
@@ -34,6 +36,7 @@ services:
     # image: vanessa/sregistry_nginx
     build:
       context: ./nginx
+    env_file: env
     ports:
       - "80:80"
     volumes:
@@ -54,6 +57,7 @@ services:
   redis:
     restart: always
     image: redis:latest
+    env_file: env
     ports:
       - "6379:6379"
     networks:
@@ -63,6 +67,7 @@ services:
     #image: vanessa/sregistry
     build:
       context: ./sregistry
+    env_file: env
     command: celery worker -A shub.celery -Q default -n default@%h -B
     volumes:
       # - ./sregistry:/code
