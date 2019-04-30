@@ -1,4 +1,4 @@
-FROM python:3.5.7
+FROM python:3.6.8
 ENV PYTHONUNBUFFERED 1
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -33,7 +33,7 @@ RUN apt-get update && apt-get install -y \
     build-essential
 
 # Install Singularity
-RUN git clone -b vault/release-2.5 https://www.github.com/sylabs/singularity.git
+RUN git clone -b vault/release-2.6 https://www.github.com/sylabs/singularity.git
 WORKDIR singularity
 RUN ./autogen.sh && ./configure --prefix=/usr/local && make && make install
 
