@@ -31,8 +31,8 @@ ENABLE_BITBUCKET_AUTH=getenv("ENABLE_BITBUCKET_AUTH", default='False').lower() =
 
 # DOMAIN NAMES
 ENV_DOMAIN_NAME=getenv('DOMAIN_NAME', default='127.0.0.1')
-DOMAIN_NAME = 'http://{}'.format(ENV_DOMAIN_NAME)
-DOMAIN_NAME_HTTP = 'http://{}'.format(ENV_DOMAIN_NAME)
+DOMAIN_NAME = f'http://{ENV_DOMAIN_NAME}'
+DOMAIN_NAME_HTTP = f'http://{ENV_DOMAIN_NAME}'
 DOMAIN_NAKED = DOMAIN_NAME_HTTP.replace('http://','')
 
 ADMINS = literal_eval(getenv('ADMINS', default='(("someone", "someone@yourdomain.com"), )'))  # (( 'dane', 'kennedy.dane@gmail.com`'),)
