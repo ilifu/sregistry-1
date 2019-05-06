@@ -15,7 +15,6 @@ services:
       context: ./sregistry
     env_file: env
     volumes:
-      - ./sregistry:/code
       - www_static:/var/www/static
       - singularity_images:/var/www/images
     depends_on:
@@ -68,7 +67,10 @@ services:
 volumes:
   pg_data:
     external: true
+
   www_static:
+    external: true
+
   singularity_images:
     external: true
 
