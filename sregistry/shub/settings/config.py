@@ -32,7 +32,6 @@ ENABLE_SAML_AUTH = getenv("ENABLE_SAML_AUTH", default='False').lower() == 'true'
 # available, and configured, as plugins.
 
 
-
 # DOMAIN NAMES
 ENV_DOMAIN_NAME=getenv('DOMAIN_NAME', default='127.0.0.1')
 DOMAIN_NAME = f'http://{ENV_DOMAIN_NAME}'
@@ -46,7 +45,6 @@ HELP_CONTACT_EMAIL = getenv('HELP_CONTACT_EMAIL')
 HELP_INSTITUTION_SITE = getenv('HELP_INSTITUTION_SITE')
 REGISTRY_NAME = getenv('REGISTRY_NAME')
 REGISTRY_URI = getenv('REGISTRY_URI')
-
 
 
 # PERMISSIONS
