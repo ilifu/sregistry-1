@@ -1,12 +1,17 @@
 # This file, secrets.py, imports environment variables configured in the env file.
 # Please configure that file, using the provided env_template file.
+from ast import literal_eval
 from os import getenv
 from .config import (
     ENABLE_GOOGLE_AUTH,
     ENABLE_TWITTER_AUTH,
     ENABLE_GITHUB_AUTH,
     ENABLE_GITLAB_AUTH,
-    ENABLE_BITBUCKET_AUTH
+    ENABLE_BITBUCKET_AUTH,
+    ENABLE_LDAP_AUTH,
+    ENABLE_PAM_AUTH,
+    ENABLE_GLOBUS,
+    ENABLE_SAML_AUTH,
 )
 SECRET_KEY = getenv('SECRET_KEY')
 
@@ -39,7 +44,7 @@ if ENABLE_GOOGLE_AUTH:
 
     # The scope is not needed, unless you want to develop something new.
     SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE')]
-    SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = eval(getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS').strip('"'))
+    SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = literal_eval(getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS').strip('"'))
 # -----------------------------------------------------------------------------
 # GitHub OAuth
 #http://psa.matiasaguirre.net/docs/backends/github.html?highlight=github
@@ -54,7 +59,7 @@ if ENABLE_GITHUB_AUTH:
 # -----------------------------------------------------------------------------
 # GitLab OAuth2
 if ENABLE_GITLAB_AUTH:
-    SOCIAL_AUTH_GITLAB_SCOPE = eval(getenv('SOCIAL_AUTH_GITLAB_SCOPE').strip('"').strip("'"))
+    SOCIAL_AUTH_GITLAB_SCOPE = literal_eval(getenv('SOCIAL_AUTH_GITLAB_SCOPE').strip('"').strip("'"))
     SOCIAL_AUTH_GITLAB_KEY = getenv('SOCIAL_AUTH_GITLAB_KEY')
     SOCIAL_AUTH_GITLAB_SECRET = getenv('SOCIAL_AUTH_GITLAB_SECRET')
 
@@ -79,60 +84,65 @@ if ENABLE_BITBUCKET_AUTH:
 # will need to modify attribute names/mappings accordingly
 # See https://django-auth-ldap.readthedocs.io/en/1.2.x/index.html
 
+
 # To work with OpenLDAP and posixGroup groups we need to import some things
-#import ldap
-#from django_auth_ldap.config import LDAPSearch, PosixGroupType
+if ENABLE_LDAP_AUTH:
+    import ldap
+    from django_auth_ldap.config import LDAPSearch, PosixGroupType
 
 # The URI to our LDAP server (may be ldap:// or ldaps://)
-#AUTH_LDAP_SERVER_URI = "ldaps://ldap.example.com
+    AUTH_LDAP_SERVER_URI = getenv('AUTH_LDAP_SERVER_URI')
 
 # DN and password needed to bind to LDAP to retrieve user information
 # Can leave blank if anonymous binding is sufficient
-#AUTH_LDAP_BIND_DN = ""
-#AUTH_LDAP_BIND_PASSWORD = ""
+
+    AUTH_LDAP_BIND_DN = getenv('AUTH_LDAP_BIND_DN')
+    AUTH_LDAP_BIND_PASSWORD = getenv('AUTH_LDAP_BIND_PASSWORD')
 
 # Any user account that has valid auth credentials can login
-#AUTH_LDAP_USER_SEARCH = LDAPSearch("ou=users,dc=example,dc=com",
-#                                   ldap.SCOPE_SUBTREE, "(uid=%(user)s)")
+    AUTH_LDAP_USER_SEARCH = LDAPSearch(
+        getenv('AUTH_LDAP_USER_SEARCH_PARAMS').strip('"').strip("'"),
+        ldap.SCOPE_SUBTREE, "(uid=%(user)s)"
+    )
 
-#AUTH_LDAP_GROUP_SEARCH = LDAPSearch("ou=groups,dc=example,dc=com",
-#                                    ldap.SCOPE_SUBTREE, "(objectClass=posixGroup)"
-#                                    )
-#AUTH_LDAP_GROUP_TYPE = PosixGroupType()
+    AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
+        getenv('AUTH_LDAP_GROUP_SEARCH_PARAMS'.strip('"').strip("'"),
+        ldap.SCOPE_SUBTREE, "(objectClass=posixGroup)"
+    )
 
-# Populate the Django user model from the LDAP directory.
-#AUTH_LDAP_USER_ATTR_MAP = {
-#    "first_name": "givenName",
-#    "last_name": "sn",
-#    "email": "mail"
-#}
+    AUTH_LDAP_GROUP_TYPE = PosixGroupType()
 
-# Map LDAP group membership into Django admin flags
-#AUTH_LDAP_USER_FLAGS_BY_GROUP = {
-#    "is_superuser": "cn=sregistry_admin,ou=groups,dc=example,dc=com"
-#}
+    # Populate the Django user model from the LDAP directory.
+    AUTH_LDAP_USER_ATTR_MAP = {
+        "first_name": "givenName",
+        "last_name": "sn",
+        "email": "mail",
+    }
 
-# AUTH_LDAP_USER_FLAGS_BY_GROUP = {
+    # Map LDAP group membership into Django admin flags
+    AUTH_LDAP_USER_FLAGS_BY_GROUP = {
+        "is_superuser": "cn=sregistry_admin,ou=groups,dc=example,dc=com"
+    }
 
-#    # Anyone in this group can get a token to manage images, not superuser
-#    "is_staff": "cn=staff,ou=django,ou=groups,dc=example,dc=com",
-#
-#    # Anyone in this group is a superuser for the app
-#    "is_superuser": "cn=superuser,ou=django,ou=groups,dc=example,dc=com"
+    AUTH_LDAP_USER_FLAGS_BY_GROUP = {
+    #    # Anyone in this group can get a token to manage images, not superuser
+        "is_staff": "cn=staff,ou=django,ou=groups,dc=example,dc=com",
+    #    # Anyone in this group is a superuser for the app
+        "is_superuser": "cn=superuser,ou=django,ou=groups,dc=example,dc=com"
 
-# }
+    }
 
 # Globus Assocation (globus)
 # Only required if 'globus' is added to PLUGINS_ENABLED in config.py
-
-#SOCIAL_AUTH_GLOBUS_KEY="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-#SOCIAL_AUTH_GLOBUS_USERNAME="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@clients.auth.globus.org"
-#SOCIAL_AUTH_GLOBUS_SECRET="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-#GLOBUS_ENDPOINT_ID="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+if ENABLE_GLOBUS:
+    SOCIAL_AUTH_GLOBUS_KEY=getenv('SOCIAL_AUTH_GLOBUS_KEY')
+    SOCIAL_AUTH_GLOBUS_USERNAME=getenv('SOCIAL_AUTH_GLOBUS_USERNAME')
+    SOCIAL_AUTH_GLOBUS_SECRET=getenv('SOCIAL_AUTH_GLOBUS_SECRET')
+    GLOBUS_ENDPOINT_ID=getenv('GLOBUS_ENDPOINT_ID')
 
 
 # SAML Authentication (saml)
 # Only required if 'saml_auth' is added to PLUGINS_ENABLED in config.py
-
-# AUTH_SAML_IDP = "stanford"
-# AUTH_SAML_INSTITUTION = "Stanford University"
+if ENABLE_SAML_AUTH:
+    AUTH_SAML_IDP = "stanford"
+    AUTH_SAML_INSTITUTION = "Stanford University"

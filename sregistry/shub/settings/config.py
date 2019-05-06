@@ -13,11 +13,15 @@ from ast import literal_eval
 # AUTHENTICATION
 
 # Which social auths do you want to use?
-ENABLE_GOOGLE_AUTH=getenv("ENABLE_GOOGLE_AUTH", default='False').lower() == 'true'
-ENABLE_TWITTER_AUTH=getenv("ENABLE_TWITTER_AUTH", default='False').lower() == 'true'
-ENABLE_GITHUB_AUTH=getenv("ENABLE_GITHUB_AUTH", default='False').lower() == 'true'
-ENABLE_GITLAB_AUTH=getenv("ENABLE_GITLAB_AUTH", default='False').lower() == 'true'
-ENABLE_BITBUCKET_AUTH=getenv("ENABLE_BITBUCKET_AUTH", default='False').lower() == 'true'
+ENABLE_GOOGLE_AUTH = getenv("ENABLE_GOOGLE_AUTH", default='False').lower() == 'true'
+ENABLE_TWITTER_AUTH = getenv("ENABLE_TWITTER_AUTH", default='False').lower() == 'true'
+ENABLE_GITHUB_AUTH = getenv("ENABLE_GITHUB_AUTH", default='False').lower() == 'true'
+ENABLE_GITLAB_AUTH = getenv("ENABLE_GITLAB_AUTH", default='False').lower() == 'true'
+ENABLE_BITBUCKET_AUTH = getenv("ENABLE_BITBUCKET_AUTH", default='False').lower() == 'true'
+ENABLE_LDAP_AUTH = getenv("ENABLE_LDAP_AUTH", default='False').lower() == 'true'
+ENABLE_PAM_AUTH = getenv("ENABLE_PAM_AUTH", default='False').lower() == 'true'
+ENABLE_GLOBUS = getenv("ENABLE_GLOBUS", default='False').lower() == 'true'
+ENABLE_SAML_AUTH = getenv("ENABLE_SAML_AUTH", default='False').lower() == 'true'
 
 # NOTE you will need to set autehtication methods up.
 # Configuration goes into secrets.py
@@ -103,3 +107,15 @@ PLUGINS_ENABLED = [
 #    'globus',
 #    'saml_auth'
 ]
+
+if ENABLE_LDAP_AUTH:
+    PLUGINS_ENABLED.append('ldap_auth')
+
+if ENABLE_PAM_AUTH:
+    PLUGINS_ENABLED.append('pam_auth')
+
+if ENABLE_GLOBUS:
+    PLUGINS_ENABLED.append('globus')
+
+if ENABLE_SAML_AUTH:
+    PLUGINS_ENABLED.append('saml_auth')
