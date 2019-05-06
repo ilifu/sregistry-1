@@ -40,7 +40,7 @@ ENABLE_BITBUCKET_AUTH=FALSE
 
 # The scope is not needed, unless you want to develop something new.
 #SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE=['https://www.googleapis.com/auth/drive']
-#SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS={'access_type': 'offline','approval_prompt': 'auto'}
+#SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS="{'access_type': 'offline','approval_prompt': 'auto'}"
 # -----------------------------------------------------------------------------
 # GitHub OAuth
 # Only required if ENABLE_GITHUB_AUTH=TRUE
