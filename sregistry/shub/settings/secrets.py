@@ -2,11 +2,11 @@
 # Please configure that file, using the provided env_template file.
 from os import getenv
 from .config import (
-	ENABLE_GOOGLE_AUTH,
-	ENABLE_TWITTER_AUTH,
-	ENABLE_GITHUB_AUTH,
-	ENABLE_GITLAB_AUTH,
-	ENABLE_BITBUCKET_AUTH
+    ENABLE_GOOGLE_AUTH,
+    ENABLE_TWITTER_AUTH,
+    ENABLE_GITHUB_AUTH,
+    ENABLE_GITLAB_AUTH,
+    ENABLE_BITBUCKET_AUTH
 )
 SECRET_KEY = getenv('SECRET_KEY')
 
@@ -23,7 +23,7 @@ SECRET_KEY = getenv('SECRET_KEY')
 # Twitter OAuth2
 # Only required if ENABLE_TWITTER_AUTH=TRUE in config.py
 if ENABLE_TWITTER_AUTH:
-	SOCIAL_AUTH_TWITTER_KEY = getenv('SOCIAL_AUTH_TWITTER_KEY')
+    SOCIAL_AUTH_TWITTER_KEY = getenv('SOCIAL_AUTH_TWITTER_KEY')
     SOCIAL_AUTH_TWITTER_SECRET = getenv('SOCIAL_AUTH_TWITTER_SECRET')
 
 # -----------------------------------------------------------------------------
@@ -31,22 +31,22 @@ if ENABLE_TWITTER_AUTH:
 # Only required if ENABLE_GOOGLE_AUTH=TRUE in config.py
 
 if ENABLE_GOOGLE_AUTH:
-	GOOGLE_CLIENT_FILE = '/code/.grilledcheese.json'
+    GOOGLE_CLIENT_FILE = '/code/.grilledcheese.json'
 
-	# http://psa.matiasaguirre.net/docs/backends/google.html?highlight=google
-	SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY')
-	SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET')
+    # http://psa.matiasaguirre.net/docs/backends/google.html?highlight=google
+    SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY')
+    SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET')
 
-	# The scope is not needed, unless you want to develop something new.
-	SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE')]
-	SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = eval(getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS').strip('"'))
+    # The scope is not needed, unless you want to develop something new.
+    SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE')]
+    SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = eval(getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS').strip('"'))
 # -----------------------------------------------------------------------------
 # GitHub OAuth
 #http://psa.matiasaguirre.net/docs/backends/github.html?highlight=github
 
 if ENABLE_GITHUB_AUTH:
-	SOCIAL_AUTH_GITHUB_KEY = getenv('SOCIAL_AUTH_GITHUB_KEY')
-	SOCIAL_AUTH_GITHUB_SECRET = getenv('SOCIAL_AUTH_GITHUB_SECRET')
+    SOCIAL_AUTH_GITHUB_KEY = getenv('SOCIAL_AUTH_GITHUB_KEY')
+    SOCIAL_AUTH_GITHUB_SECRET = getenv('SOCIAL_AUTH_GITHUB_SECRET')
 
 # You shouldn't actually need this if we aren't using repos
 # SOCIAL_AUTH_GITHUB_SCOPE = ["repo","user"]
@@ -54,17 +54,17 @@ if ENABLE_GITHUB_AUTH:
 # -----------------------------------------------------------------------------
 # GitLab OAuth2
 if ENABLE_GITLAB_AUTH:
-	SOCIAL_AUTH_GITLAB_SCOPE = eval(getenv('SOCIAL_AUTH_GITLAB_SCOPE').strip('"').strip("'"))
-	SOCIAL_AUTH_GITLAB_KEY = getenv('SOCIAL_AUTH_GITLAB_KEY')
-	SOCIAL_AUTH_GITLAB_SECRET = getenv('SOCIAL_AUTH_GITLAB_SECRET')
+    SOCIAL_AUTH_GITLAB_SCOPE = eval(getenv('SOCIAL_AUTH_GITLAB_SCOPE').strip('"').strip("'"))
+    SOCIAL_AUTH_GITLAB_KEY = getenv('SOCIAL_AUTH_GITLAB_KEY')
+    SOCIAL_AUTH_GITLAB_SECRET = getenv('SOCIAL_AUTH_GITLAB_SECRET')
 
 
 # -----------------------------------------------------------------------------
 # Bitbucket OAuth2
 if ENABLE_BITBUCKET_AUTH:
-	SOCIAL_AUTH_BITBUCKET_OAUTH2_KEY = getenv('SOCIAL_AUTH_BITBUCKET_OAUTH2_KEY') 
-	SOCIAL_AUTH_BITBUCKET_OAUTH2_SECRET = getenv('SOCIAL_AUTH_BITBUCKET_OAUTH2_SECRET')
-	SOCIAL_AUTH_BITBUCKET_OAUTH2_VERIFIED_EMAILS_ONLY = getenv('SOCIAL_AUTH_BITBUCKET_OAUTH2_VERIFIED_EMAILS_ONLY') 
+    SOCIAL_AUTH_BITBUCKET_OAUTH2_KEY = getenv('SOCIAL_AUTH_BITBUCKET_OAUTH2_KEY') 
+    SOCIAL_AUTH_BITBUCKET_OAUTH2_SECRET = getenv('SOCIAL_AUTH_BITBUCKET_OAUTH2_SECRET')
+    SOCIAL_AUTH_BITBUCKET_OAUTH2_VERIFIED_EMAILS_ONLY = getenv('SOCIAL_AUTH_BITBUCKET_OAUTH2_VERIFIED_EMAILS_ONLY') 
 
 # =============================================================================
 # Plugin Authentication
