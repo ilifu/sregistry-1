@@ -22,28 +22,26 @@ SECRET_KEY = getenv('SECRET_KEY')
 
 # Twitter OAuth2
 # Only required if ENABLE_TWITTER_AUTH=TRUE in config.py
-#SOCIAL_AUTH_TWITTER_KEY = ''
-#SOCIAL_AUTH_TWITTER_SECRET = ''
+if ENABLE_TWITTER_AUTH:
+	SOCIAL_AUTH_TWITTER_KEY = getenv('SOCIAL_AUTH_TWITTER_KEY')
+    SOCIAL_AUTH_TWITTER_SECRET = getenv('SOCIAL_AUTH_TWITTER_SECRET')
 
 # -----------------------------------------------------------------------------
 # Google OAuth2
 # Only required if ENABLE_GOOGLE_AUTH=TRUE in config.py
 
-#GOOGLE_CLIENT_FILE='/code/.grilledcheese.json'
+if ENABLE_GOOGLE_AUTH:
+	GOOGLE_CLIENT_FILE = '/code/.grilledcheese.json'
 
-# http://psa.matiasaguirre.net/docs/backends/google.html?highlight=google
-#SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = 'xxxxxxxxxxxxxxxxxx.apps.googleusercontent.com'
-#SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'xxxxxxxxxxxxxxxxx'
+	# http://psa.matiasaguirre.net/docs/backends/google.html?highlight=google
+	SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_KEY')
+	SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET')
 
-# The scope is not needed, unless you want to develop something new.
-#SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = ['https://www.googleapis.com/auth/drive']
-#SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = {
-#    'access_type': 'offline',
-#    'approval_prompt': 'auto'
-#}
+	# The scope is not needed, unless you want to develop something new.
+	SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE')]
+	SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS = eval(getenv('SOCIAL_AUTH_GOOGLE_OAUTH2_AUTH_EXTRA_ARGUMENTS').strip('"'))
 # -----------------------------------------------------------------------------
 # GitHub OAuth
-# Only required if ENABLE_GITHUB_AUTH=TRUE in config.py
 #http://psa.matiasaguirre.net/docs/backends/github.html?highlight=github
 
 if ENABLE_GITHUB_AUTH:
@@ -55,18 +53,18 @@ if ENABLE_GITHUB_AUTH:
 
 # -----------------------------------------------------------------------------
 # GitLab OAuth2
-
-#SOCIAL_AUTH_GITLAB_SCOPE = ['api', 'read_user']
-#SOCIAL_AUTH_GITLAB_KEY = ''
-#SOCIAL_AUTH_GITLAB_SECRET = ''
+if ENABLE_GITLAB_AUTH:
+	SOCIAL_AUTH_GITLAB_SCOPE = eval(getenv('SOCIAL_AUTH_GITLAB_SCOPE').strip('"').strip("'"))
+	SOCIAL_AUTH_GITLAB_KEY = getenv('SOCIAL_AUTH_GITLAB_KEY')
+	SOCIAL_AUTH_GITLAB_SECRET = getenv('SOCIAL_AUTH_GITLAB_SECRET')
 
 
 # -----------------------------------------------------------------------------
 # Bitbucket OAuth2
-
-# SOCIAL_AUTH_BITBUCKET_OAUTH2_KEY = '<your-consumer-key>'
-# SOCIAL_AUTH_BITBUCKET_OAUTH2_SECRET = '<your-consumer-secret>'
-# SOCIAL_AUTH_BITBUCKET_OAUTH2_VERIFIED_EMAILS_ONLY = True
+if ENABLE_BITBUCKET_AUTH:
+	SOCIAL_AUTH_BITBUCKET_OAUTH2_KEY = getenv('SOCIAL_AUTH_BITBUCKET_OAUTH2_KEY') 
+	SOCIAL_AUTH_BITBUCKET_OAUTH2_SECRET = getenv('SOCIAL_AUTH_BITBUCKET_OAUTH2_SECRET')
+	SOCIAL_AUTH_BITBUCKET_OAUTH2_VERIFIED_EMAILS_ONLY = getenv('SOCIAL_AUTH_BITBUCKET_OAUTH2_VERIFIED_EMAILS_ONLY') 
 
 # =============================================================================
 # Plugin Authentication
