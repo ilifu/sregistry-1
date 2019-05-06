@@ -69,7 +69,7 @@ if ENABLE_GITLAB_AUTH:
 if ENABLE_BITBUCKET_AUTH:
     SOCIAL_AUTH_BITBUCKET_OAUTH2_KEY = getenv('SOCIAL_AUTH_BITBUCKET_OAUTH2_KEY') 
     SOCIAL_AUTH_BITBUCKET_OAUTH2_SECRET = getenv('SOCIAL_AUTH_BITBUCKET_OAUTH2_SECRET')
-    SOCIAL_AUTH_BITBUCKET_OAUTH2_VERIFIED_EMAILS_ONLY = getenv('SOCIAL_AUTH_BITBUCKET_OAUTH2_VERIFIED_EMAILS_ONLY') 
+    SOCIAL_AUTH_BITBUCKET_OAUTH2_VERIFIED_EMAILS_ONLY = getenv('SOCIAL_AUTH_BITBUCKET_OAUTH2_VERIFIED_EMAILS_ONLY').lower()=="true"
 
 # =============================================================================
 # Plugin Authentication
@@ -106,7 +106,7 @@ if ENABLE_LDAP_AUTH:
     )
 
     AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
-        getenv('AUTH_LDAP_GROUP_SEARCH_PARAMS'.strip('"').strip("'"),
+        getenv('AUTH_LDAP_GROUP_SEARCH_PARAMS').strip('"').strip("'"),
         ldap.SCOPE_SUBTREE, "(objectClass=posixGroup)"
     )
 
@@ -120,17 +120,7 @@ if ENABLE_LDAP_AUTH:
     }
 
     # Map LDAP group membership into Django admin flags
-    AUTH_LDAP_USER_FLAGS_BY_GROUP = {
-        "is_superuser": "cn=sregistry_admin,ou=groups,dc=example,dc=com"
-    }
-
-    AUTH_LDAP_USER_FLAGS_BY_GROUP = {
-    #    # Anyone in this group can get a token to manage images, not superuser
-        "is_staff": "cn=staff,ou=django,ou=groups,dc=example,dc=com",
-    #    # Anyone in this group is a superuser for the app
-        "is_superuser": "cn=superuser,ou=django,ou=groups,dc=example,dc=com"
-
-    }
+    AUTH_LDAP_USER_FLAGS_BY_GROUP = literal_eval(getenv('AUTH_LDAP_USER_FLAGS_BY_GROUP'))
 
 # Globus Assocation (globus)
 # Only required if 'globus' is added to PLUGINS_ENABLED in config.py
