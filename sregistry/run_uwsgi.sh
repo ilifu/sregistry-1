@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cp -Rup /code_static/* /code/
+
 python manage.py makemigrations
 python manage.py migrate auth
 python manage.py makemigrations users

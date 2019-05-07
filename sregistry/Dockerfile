@@ -42,7 +42,7 @@ ADD requirements.txt /tmp/requirements.txt
 RUN pip install --upgrade pip
 RUN pip install -r /tmp/requirements.txt
 
-ADD . /code/
+ADD . /code_static/
 
 ################################################################################
 # PLUGINS
@@ -65,7 +65,8 @@ ADD . /code/
 ################################################################################
 # BASE
 
-RUN mkdir -p /code && mkdir -p /code/images
+RUN ln -s /code_static /code
+RUN mkdir -p /code/images
 RUN mkdir -p /var/www/images && chmod -R 0755 /code/images/
 
 WORKDIR /code
