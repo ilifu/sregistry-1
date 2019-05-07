@@ -8,6 +8,7 @@ RUN sh -x /usr/src/install.sh
 
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY nginx.vh.default.conf /etc/nginx/conf.d/default.conf
+COPY sregistry.conf.template /etc/nginx/conf.d/sregistry.conf.template
 
 # Create hashed temporary upload locations /tmp/0 through /tmp/9
 RUN mkdir -p /tmp/{0..9}
