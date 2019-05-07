@@ -5,7 +5,7 @@
 !/.gitignore
 __pycache__
 *.img
-sregistry
+# sregistry
 _site
 
 # Other #
