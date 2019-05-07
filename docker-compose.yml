@@ -56,7 +56,7 @@ services:
     build:
       context: ./sregistry
     env_file: env
-    command: celery worker -A shub.celery -Q default -n default@%h -B
+    command: /wait-for-it.sh -t 0 uwsgi:3031 -- celery worker -A shub.celery -Q default -n default@%h -B
     volumes:
       - www_static:/var/www/static
       - singularity_images:/var/www/images

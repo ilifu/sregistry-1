@@ -84,6 +84,9 @@ RUN rm /code/cronjob
 # Create hashed temporary upload locations
 RUN mkdir -p /var/www/images/_upload/{0..9} && chmod 777 -R /var/www/images/_upload
 
+# Add wait-for-it-script
+ADD wait-for-it.sh /
+
 CMD /code/run_uwsgi.sh
 
 EXPOSE 3031
