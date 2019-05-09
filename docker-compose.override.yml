@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  jenkins:
+    build: 
+      context: ./jenkins
+    ports:
+      - "50000:50000"
+    volumes:
+      - jenkins-log:/var/log/jenkins
+      - jenkins-data:/var/jenkins_home
+    networks:
+      - internal
+
+  nginx:
+    restart: always
+    build:
+      context: ./nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./sregistry/uwsgi_params.par:/etc/nginx/uwsgi_params.par:ro
+      - www_static:/var/www/static
+      - singularity_images:/var/www/images
+      - ./jenkins.conf:/etc/nginx/conf.d/jenkins.conf
+    depends_on:
+      - uwsgi
+      - jenkins
+    networks:
+      - internal
+      - external
+
+volumes:
+  jenkins-log:
+    external: true
+
+  jenkins-data:
+    external: true
