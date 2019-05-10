@@ -8,16 +8,12 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 '''
 
+from django.http import HttpResponseNotFound, HttpResponseServerError
 from django.shortcuts import render
-from django.template.context import RequestContext
 
 
-def handler404(request):
-    response = render(request,'base/404.html', {})
-    response.status_code = 404
-    return response
+def handler404(request, exception):
+    return HttpResponseNotFound(render(request, 'base/404.html'))
 
 def handler500(request):
-    response = render(request,'base/500.html', {})
-    response.status_code = 500
-    return response
+    return HttpResponseServerError(render(request, 'base/500.html'))

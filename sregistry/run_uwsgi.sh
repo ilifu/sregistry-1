@@ -1,6 +1,7 @@
 #!/bin/bash
 
-cp -Rup /code_static/* /code/
+echo "Updating code"
+cp -a /code_static/* /code/
 
 python manage.py makemigrations
 python manage.py migrate auth
