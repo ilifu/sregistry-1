@@ -8,31 +8,37 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 '''
 
-from shub.logger import bot
 from urllib.parse import unquote
 from django.http import JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
 import json
 from django.shortcuts import redirect
+from django.views.decorators.csrf import csrf_exempt
+from django.views.generic.base import TemplateView
+from django.contrib import messages
 
 from shub.apps.main.models import Collection
-from sregistry.main.registry.auth import generate_timestamp
 from shub.apps.api.utils import ( 
     get_request_user,
     has_permission,
     validate_request
 )
+from shub.settings import (
+    DISABLE_BUILDING,
+    VIEW_RATE_LIMIT as rl_rate, 
+    VIEW_RATE_LIMIT_BLOCK as rl_block
+)
 
+from sregistry.main.registry.auth import generate_timestamp
+
+from ratelimit.decorators import ratelimit
 from rest_framework.exceptions import PermissionDenied
-from django.views.decorators.csrf import csrf_exempt
-from django.views.generic.base import TemplateView
-from django.contrib import messages
 
 import os
 
 # Terminal Upload
 
-
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 @csrf_exempt
 def upload_complete(request):
     '''view called on /api/upload/complete after nginx upload module finishes.
@@ -52,12 +58,14 @@ def upload_complete(request):
         csrftoken = request.META.get('CSRF_COOKIE')
 
         if auth is None and csrftoken is None:
-
-            # Clean up the file
             if os.path.exists(filename):
                 os.remove(path)
-
             raise PermissionDenied(detail="Authentication Required")
+
+        if DISABLE_BUILDING:
+            if os.path.exists(filename):
+                os.remove(path)
+            raise PermissionDenied(detail="Uploading is disabled.")
 
         # at this point, the collection MUST exist
         try:
@@ -91,12 +99,12 @@ def upload_complete(request):
             name = "%s:%s" %(name, tag)
         
         # Expected params are upload_id, name, md5, and cid
-        message = upload_container(cid = collection.id,
-                                   user = owner,
-                                   version = version,
-                                   upload_id = path,
-                                   name = name,
-                                   size = size)
+        message = upload_container(cid=collection.id,
+                                   user=owner,
+                                   version=version,
+                                   upload_id=path,
+                                   name=name,
+                                   size=size)
 
         # If the function doesn't return a message (None), indicates success
         if message is None:

@@ -3,18 +3,21 @@ db:
 
 uwsgi:
   restart: always
-  image: vanessa/sregistry
+  image: quay.io/vanessa/sregistry
   volumes:
     - .:/code
     - ./static:/var/www/static
     - ./images:/var/www/images
+    # uncomment for PAM auth
+    #- /etc/passwd:/etc/passwd 
+    #- /etc/shadow:/etc/shadow
   links:
     - redis
     - db
 
 nginx:
   restart: always
-  image: vanessa/sregistry_nginx
+  image: quay.io/vanessa/sregistry_nginx
   ports:
     - "80:80"
     - "443:443"
@@ -32,13 +35,21 @@ nginx:
 redis:
   restart: always
   image: redis:latest
-  ports:
-    - "6379:6379"
 
+scheduler:
+  image: quay.io/vanessa/sregistry
+  command: python /code/manage.py rqscheduler
+  volumes:
+    - .:/code
+  volumes_from:
+    - uwsgi
+  links:
+    - redis
+    - db
 
 worker:
-  image: vanessa/sregistry
-  command: celery worker -A shub.celery -Q default -n default@%h -B
+  image: quay.io/vanessa/sregistry
+  command: python /code/manage.py rqworker default
   volumes:
     - .:/code
   volumes_from:

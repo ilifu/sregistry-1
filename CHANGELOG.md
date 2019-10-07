@@ -12,6 +12,18 @@ represented by the pull requests that fixed them. Critical items to know are:
 
 
 ## [master](https://github.com/singularityhub/sregistry/tree/master) (master)
+ - adding backup as cron job (1.1.07)
+ - collection settings are viewable by registry staff/superusers (1.1.06)
+ - library pull needs to minimally check if container is private (1.1.05)
+ - accidental removed of user profile prefix for custom profile (1.1.04)
+ - adding django-ratelimit to all views, customized via settings (1.1.03)
+   - button in profile to delete account
+   - API throttle with defaults for users and anon
+ - setting API schema backend to use coreapi.AutoSchema (1.1.02)
+ - documentation fixes
+ - application migrations added back in run_uwsgi.sh (1.1.01)
+   - major update of documentation theme
+ - addition of Google Cloud Build, versioning, tags to collections (1.1.0)
  - adding BitBucket authentication backend
  - updating sregistry-cli to 0.0.97, catching OSError earlier
  - updating sregistry-cli to 0.0.96, and Singularity download url to use sylabs organization

@@ -8,20 +8,24 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 '''
 
-
 from django.shortcuts import render
-from django.template.context import RequestContext
-from django.db.models import Q
+from ratelimit.decorators import ratelimit
+
+from shub.settings import (
+    VIEW_RATE_LIMIT as rl_rate, 
+    VIEW_RATE_LIMIT_BLOCK as rl_block
+)
 
 
 # Search Pages #################################################################
 
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 def search_view(request):
     context = {'active':'share'}
     return render(request, 'search/search.html', context)
 
-
-def search_query(request,query=None):
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
+def search_query(request, query=None):
     '''query is a post, and results returned immediately'''
     from shub.apps.main.query import collection_query
     context = {'submit_result':'anything'}
@@ -31,7 +35,7 @@ def search_query(request,query=None):
  
     return render(request, 'search/search_single_page.html', context)
 
-
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 def container_search(request):
     '''container_search is the ajax driver to show results for a container search.
     by default we search container collection name.
@@ -41,7 +45,7 @@ def container_search(request):
         q = request.GET.get('q')
         if q is not None:    
             results = collection_query(q)
-            context = {"results":results,
+            context = {"results": results,
                        "submit_result": "anything"}
 
             return render(request, 'search/result.html', context)

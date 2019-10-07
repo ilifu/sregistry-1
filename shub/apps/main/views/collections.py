@@ -8,31 +8,32 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 '''
 
-from shub.apps.main.models import (
-    Container, 
-    Collection,
-    Star
+from shub.settings import (
+    PRIVATE_ONLY,
+    COLLECTIONS_VIEW_PAGE_COUNT as collection_count,
+    VIEW_RATE_LIMIT as rl_rate, 
+    VIEW_RATE_LIMIT_BLOCK as rl_block
 )
-
-from sregistry.utils import read_file
 from shub.apps.users.views import validate_credentials
 from shub.apps.main.utils import format_collection_name
+from shub.apps.main.models import (
+    Container, 
+    Collection
+)
+
+
 from django.shortcuts import (
     render, 
     redirect
 )
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.http.response import Http404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from shub.settings import PRIVATE_ONLY
 from itertools import chain
+from ratelimit.decorators import ratelimit
 
-import os
-import re
 import uuid
-import pickle
-
 
 
 def get_collection(cid):
@@ -42,7 +43,6 @@ def get_collection(cid):
        Parameters
        ==========
        cid: the id of the collection to look up
-
    '''
     keyargs = {'id':cid}
     try:
@@ -52,20 +52,38 @@ def get_collection(cid):
     else:
         return collection
 
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
+def get_collection_named(name, retry=True):
+    '''get a collection by name. First we try the collection name,
+       then we try splitting if the name includes /
+
+       Parameters
+       ==========
+       name: the name of the collection to look up
+   '''
+    try:
+        collection = Collection.objects.get(name=name)
+    except Collection.DoesNotExist:
+        if retry is True and "/" in name:
+            name = name.split('/')[0]
+            return get_collection_named(name, retry=False)
+        raise Http404
+    else:
+        return collection
+
 
 ################################################################################
 # COLLECTIONS ##################################################################
 ################################################################################
 
-
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 def all_collections(request):
     '''view all container collections. This only includes public collections,
        and we add collections for which the user has permission.
 
     '''
-
-    # public collections
-    collections = Collection.objects.filter(private=False)
+    limit = min(Collection.objects.count(), collection_count)
+    collections = Collection.objects.filter(private=False).annotate(Count('star', distinct=True)).order_by('-star__count')[:limit]
 
     # private that the user can view
     private_collections = [x for x in Collection.objects.filter(private=True)
@@ -80,6 +98,7 @@ def all_collections(request):
     return render(request, 'collections/all_collections.html', context)
 
 
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 @login_required
 def my_collections(request):
     '''this view will provide a list of collections for the logged in user
@@ -95,7 +114,7 @@ def my_collections(request):
     return render(request, 'collections/all_collections.html', context)
 
 
-
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 @login_required
 def new_collection(request):
     '''new_container_collection will display a form to generate a new collection
@@ -114,7 +133,7 @@ def new_collection(request):
                 collection.owners.add(request.user)
                 collection.save()
 
-            messages.info(request, 'Collection %s created.' %name)
+            messages.info(request, 'Collection %s created.' % name)
             return redirect('collection_details', cid=collection.id)
 
         # Just new collection form, not a post
@@ -125,25 +144,42 @@ def new_collection(request):
     messages.info(request, "You don't have permission to perform this action.")
     return redirect("collections")
 
-
-
-
-def view_collection(request, cid):
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
+def view_named_collection(request, username, reponame):
     '''View container build details (all container builds for a repo)
+       This is the same as view_collection but we look up the collection
+       by its full name.
 
        Parameters
        ==========
-       cid: the collection id
- 
+       username: the owner of the collection
+       reponame: the collection name
     '''
+    # First attempt, try looking up collection by username/reponame
+    try:
+        collection = Collection.objects.get(name="%s/%s" %(username, reponame))
+    except Collection.DoesNotExist:
 
-    collection = get_collection(cid)
+        # Then look for username only
+        try:
+            collection = Collection.objects.get(name=username)
+        except:
+            raise Http404
+
+    return _view_collection(request, collection)
+
+
+def _view_collection(request, collection):
+    '''a shared function to finish up checking permissions for viewing
+       a collection, and returning to the user. Called by view_named_collection
+       and view_collection
+    '''
     edit_permission = collection.has_edit_permission(request)
     view_permission = collection.has_view_permission(request)
 
     # If private, and not the owner, no go.
     if collection.private and not view_permission:
-        messages.info(request,"This collection is private.")
+        messages.info(request, "This collection is private.")
         return redirect('collections')
 
     # If the user is logged in, see if there is a star
@@ -157,7 +193,20 @@ def view_collection(request, cid):
     return render(request, 'collections/view_collection.html', context)
 
 
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
+def view_collection(request, cid):
+    '''View container build details (all container builds for a repo)
 
+       Parameters
+       ==========
+       cid: the collection id
+ 
+    '''
+    collection = get_collection(cid)
+    return _view_collection(request, collection)
+
+
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 def collection_settings(request, cid):
     '''Collection settings is the entrypoint for editing the builder, branches,
        and administrative actions like disabling and deleting collections. if 
@@ -168,7 +217,6 @@ def collection_settings(request, cid):
        Parameters
        ==========
        cid: the id of the collection
-
     '''
     from shub.apps.users.permissions import has_create_permission
     from shub.apps.users.models import Team
@@ -181,15 +229,12 @@ def collection_settings(request, cid):
     owners_ids = [x.id for x in collection.owners.all()]
     contrib_ids = [x.id for x in collection.contributors.all()]
 
-    if request.user not in collection.owners.all():
-        messages.info(request,"Only owners can change collection settings")
-        return redirect('collection_details', cid=collection.id)
-
+    # Superusers, staff, and owners can edit collection settings
     if not edit_permission:
-        messages.info(request,"You are not permitted to perform this action.")
-        return redirect('collections')
+        messages.info(request, "You are not permitted to perform this action.")
+        return redirect('collection_details', cid=collection.id)
                
-    context = {'collection':collection,
+    context = {'collection': collection,
                'teams': Team.objects.all(),
                'owners_ids': owners_ids,
                'contrib_ids': contrib_ids,
@@ -199,7 +244,7 @@ def collection_settings(request, cid):
     return render(request, 'collections/collection_settings.html', context)
 
 
-
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 def edit_collection(request, cid):
     '''edit collection will let the user specify a different image for
        their builds, in the case that the provided isn't large enough, etc.
@@ -209,12 +254,11 @@ def edit_collection(request, cid):
        cid: the id of the collection
 
     '''
-
     collection = get_collection(cid)
 
     edit_permission = collection.has_edit_permission(request)
     if not edit_permission:
-        messages.info(request,"You are not permitted to perform this action.")
+        messages.info(request, "You are not permitted to perform this action.")
         return redirect('collections')
                
     if request.method == "POST":
@@ -233,11 +277,11 @@ def edit_collection(request, cid):
 
 
     context = {'collection':collection,
-               'edit_permission':edit_permission }
+               'edit_permission':edit_permission}
 
     return render(request, 'collections/edit_collection.html', context)
 
-
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 def collection_commands(request, cid):
     '''collection commands will show the user example commands for interacting
        with a collection
@@ -252,15 +296,14 @@ def collection_commands(request, cid):
 
     # If private, and not the owner, no go.
     if not collection.has_view_permission(request):
-        messages.info(request,"This collection is private.")
+        messages.info(request, "This collection is private.")
         return redirect('collections')
 
     context = {"collection":collection}
     return render(request, 'collections/collection_commands.html', context)
 
-
-
-def delete_collection(request,cid):
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
+def delete_collection(request, cid):
     '''delete a container collection
 
        Parameters
@@ -268,12 +311,24 @@ def delete_collection(request,cid):
        cid: the collection id to delete
 
     '''
+    if not _delete_collection(request, cid):
+        messages.info(request, "This action is not permitted.")
+        return redirect('collections')
+
+    messages.info(request, 'Collection successfully deleted.')
+    return redirect('collections')
+
+
+def _delete_collection(request, cid):
+    ''' the underlying call for delete_collection, intended for use
+        also not directly from a view. Returns True or False if the
+        collection is deleted.
+    '''
     collection = get_collection(cid)
 
     # Only an owner can delete
     if not collection.has_edit_permission(request):
-        messages.info(request,"This action is not permitted.")
-        return redirect('collections')
+        return False
 
     # Delete files before containers
     containers = Container.objects.filter(collection=collection)
@@ -281,12 +336,7 @@ def delete_collection(request,cid):
     for container in containers:
         container.delete()
     collection.delete()
-
-    messages.info(request,'Collection successfully deleted.')
-    return redirect('collections')
-
-
-
+    return True
 
 
 ################################################################################
@@ -303,29 +353,28 @@ def _change_collection_privacy(request, collection, make_private=True):
        request: the request object with user permissions, etc.
        collection: the collection to make private
        make_private: boolean, True indicates asking for private
-
     '''
     edit_permission = collection.has_edit_permission(request)
 
     # Customize message based on making public or private
     status = "private"
-    if make_private == False:
+    if not make_private:
         status = "public"
 
     # If the user has edit permission, make the repo private
-    if edit_permission is True:
-
+    if edit_permission:
         collection.private = make_private 
-        messages.info(request,"Collection set to %s." %(status))
+        messages.info(request, "Collection set to %s." % status)
         collection.save()
 
     else:
-        messages.info(request,"You need permissions to perform this operation.")
+        messages.info(request, "You need permissions to perform this operation.")
     return collection
 
 
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 @login_required
-def change_collection_privacy(request,cid,make_private=True):
+def change_collection_privacy(request, cid, make_private=True):
     '''change collection privacy, if the user has permission
 
        Parameters
@@ -343,34 +392,31 @@ def change_collection_privacy(request,cid,make_private=True):
 
 
 
-
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 @login_required
-def make_collection_private(request,cid):
+def make_collection_private(request, cid):
     '''make collection private will make a collection private
 
        Parameters
        ==========
        cid: the collection id to make private
-
     '''
     return change_collection_privacy(request, cid, make_private=True)
 
 
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 @login_required
-def make_collection_public(request,cid):
+def make_collection_public(request, cid):
     '''make collection public will make a collection public
 
        Parameters
        ==========
        cid: the collection id to make public
-
     '''
-    if PRIVATE_ONLY is True:
-        messages.info(request,"This registry only allows private collections.")
+    if PRIVATE_ONLY:
+        messages.info(request, "This registry only allows private collections.")
         return redirect('collection_details', cid=cid)
-    return change_collection_privacy(request,cid,make_private=False)
-
-
+    return change_collection_privacy(request, cid, make_private=False)
 
 
 ################################################################################
@@ -386,7 +432,6 @@ def _edit_contributors(userids, collection, add_user=True, level="contributor"):
        userids: a string list, or single string of a user id
        add_user: if True, perform add on the collection. If False, remove.
        level: one of contributor or owner.
-
     '''
     from shub.apps.users.utils import get_user
 
@@ -412,7 +457,7 @@ def _edit_contributors(userids, collection, add_user=True, level="contributor"):
 
     return collection
 
-
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 @login_required
 def edit_contributors(request, cid):
     '''edit_contributors is the submission to see, add, and delete contributors 
@@ -421,9 +466,6 @@ def edit_contributors(request, cid):
     '''
     
     collection = get_collection(cid)
-
-    # Who are current contributors?
-    contributors = collection.contributors.all()
 
     # Who are current owners?
     owners = collection.owners.all()

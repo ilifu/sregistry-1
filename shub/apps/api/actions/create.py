@@ -9,13 +9,11 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 '''
 
 from shub.settings import MEDIA_ROOT
-from sregistry.utils import parse_image_name
 from shub.logger import bot
+from sregistry.utils import parse_image_name
 from django.db import IntegrityError
-from django.db.utils import DataError
+import django_rq
 import shutil
-import uuid
-import json
 import os
 
 def move_upload_to_storage(collection, upload_id):
@@ -36,7 +34,7 @@ def move_upload_to_storage(collection, upload_id):
     
     # Rename the file, moving from ImageUpload to Storage
     filename = os.path.basename(instance.file.path)
-    new_path = os.path.join(image_home, filename.replace('.part', '.simg'))
+    new_path = os.path.join(image_home, filename.replace('.part', '.sif'))
     shutil.move(instance.file.path, new_path)
     print('%s --> %s' %(instance.file.path, new_path))
     instance.file.name = new_path
@@ -52,7 +50,7 @@ def generate_nginx_storage_path(collection, source, dest):
          source: the source file (under /var/www/images/_upload/{0-9}
          dest: the destination filename
     '''
-    image_home = "%s/%s" %(MEDIA_ROOT, collection.name)
+    image_home = os.path.join(MEDIA_ROOT, collection.name)
     return os.path.join(image_home, os.path.basename(dest))
 
 
@@ -68,13 +66,26 @@ def move_nginx_upload_to_storage(collection, source, dest):
          dest: the destination filename
     '''
     # Create collection root, if it doesn't exist
-    image_home = "%s/%s" %(MEDIA_ROOT, collection.name)
+    image_home = os.path.join(MEDIA_ROOT, collection.name)
     if not os.path.exists(image_home):
-        os.mkdir(image_home)
+        os.makedirs(image_home)
     
     new_path = os.path.join(image_home, os.path.basename(dest))
     shutil.move(source, new_path)
     return new_path
+
+def calculate_version(cid):
+    '''calculate version is run as a separate task after a container upload.
+       Instead of using md5 provided by nginx we calculate sha256 sum and
+       then include as the version variable.
+    '''
+    from shub.apps.main.views import get_container
+    from sregistry.utils import get_file_hash
+    print("Calculating version for upload.")
+    container = get_container(cid)
+    version = "sha256.%s" % get_file_hash(container.image.datafile.path, "sha256")
+    container.version = version
+    container.save()
 
 
 def upload_container(cid, user, name, version, upload_id, size=None):
@@ -97,9 +108,8 @@ def upload_container(cid, user, name, version, upload_id, size=None):
                 error / success codes.
     '''
 
-    from shub.apps.main.models import ( Container, Collection )
-    from shub.apps.api.models import ( ImageUpload, ImageFile )
-    from shub.apps.main.views import update_container_labels
+    from shub.apps.main.models import (Container, Collection)
+    from shub.apps.api.models import (ImageUpload, ImageFile)
     collection = Collection.objects.get(id=cid)
 
     # Only continue if user is an owner
@@ -127,9 +137,20 @@ def upload_container(cid, user, name, version, upload_id, size=None):
         else:
             instance = move_upload_to_storage(collection, upload_id)
 
+        print(names)
+
+        # A collection name can have a slash (or not)
+        container_uri = names['uri']
+        container_name = names['image']
+        if "/" in collection.name:
+            container_uri = "%s:%s" %(collection.name, names['tag'])
+            if names['version']:
+                container_uri = "%s:%s@%s" %(collection.name, names['tag'], names['version'])
+            container_name = collection.name
+
         image = ImageFile.objects.create(collection=collection,
                                          tag=names['tag'],
-                                         name=names['uri'],
+                                         name=container_uri,
                                          owner_id=user.id,
                                          datafile=instance.file)
 
@@ -137,12 +158,12 @@ def upload_container(cid, user, name, version, upload_id, size=None):
         # Filter by negative id so we get the more recent container first.
         collection_set = collection.containers
         containers = collection_set.filter(tag=names['tag'],
-                                           name=names['image']).order_by('-id')
+                                           name=container_name).order_by('-id')
 
         # If one exists, we check if it's frozen
         create_new = True
 
-        if len(containers) > 0:
+        if containers:
 
             # If we already have a container, it might be frozen
             container = containers[0]
@@ -156,17 +177,14 @@ def upload_container(cid, user, name, version, upload_id, size=None):
         if create_new is True:
             try:
                 container = Container.objects.create(collection=collection,
-                                                     name=names['image'],
+                                                     name=container_name,
                                                      tag=names['tag'],
                                                      image=image,
                                                      version=names['version'])
 
             # Catches when container is frozen, and version already exists
             except IntegrityError:
-                message = '%s/%s:%s@%s already exists.' %(collection.name,
-                                                          names['image'],
-                                                          names['tag'],
-                                                          names['version'])
+                message = '%s already exists.' % container_uri
                 bot.error(message)
                 delete_file_instance(instance)
                 return message
@@ -185,6 +203,9 @@ def upload_container(cid, user, name, version, upload_id, size=None):
 
         # Once the container is saved, delete the intermediate file object
         delete_file_instance(instance)
+
+        # Run a task to calculate the sha256 sum
+        django_rq.enqueue(calculate_version, cid=container.id)
 
 
 def delete_file_instance(instance):

@@ -1,6 +1,13 @@
 FROM python:3.5.7
 ENV PYTHONUNBUFFERED 1
 ENV DEBIAN_FRONTEND noninteractive
+ENV MESSAGELEVEL QUIET
+
+ARG ENABLE_LDAP=false
+ARG ENABLE_PAM=false
+ARG ENABLE_GOOGLEBUILD=false
+ARG ENABLE_GLOBUS=false
+ARG ENABLE_SAML=false
 
 ################################################################################
 # CORE
@@ -32,11 +39,6 @@ RUN apt-get update && apt-get install -y \
     squashfs-tools \
     build-essential
 
-# Install Singularity
-RUN git clone -b vault/release-2.5 https://www.github.com/sylabs/singularity.git
-WORKDIR singularity
-RUN ./autogen.sh && ./configure --prefix=/usr/local && make && make install
-
 # Install Python requirements out of /tmp so not triggered if other contents of /code change
 ADD requirements.txt /tmp/requirements.txt
 RUN pip install --upgrade pip
@@ -46,21 +48,25 @@ ADD . /code/
 
 ################################################################################
 # PLUGINS
-# You are free to comment out those plugins that you don't want to use
+# You are free to uncomment the plugins that you want to use
 
 # Install LDAP (uncomment if wanted)
-# RUN pip install python3-ldap
-# RUN pip install django-auth-ldap
+RUN if $ENABLE_LDAP; then pip install python3-ldap ; fi;
+RUN if $ENABLE_LDAP; then pip install django-auth-ldap ; fi;
 
 # Install PAM Authentication (uncomment if wanted)
-# RUN pip install django-pam
+RUN if $ENABLE_PAM; then pip install django-pam ; fi;
+
+# Ensure Google Build Installed
+RUN if $ENABLE_GOOGLEBUILD; then pip install sregistry[google-build] ; fi;
+ENV SREGISTRY_GOOGLE_STORAGE_PRIVATE=true
 
 # Install Globus (uncomment if wanted)
-# RUN /bin/bash /code/scripts/globus/globus-install.sh
+RUN if $ENABLE_GLOBUS; then /bin/bash /code/scripts/globus/globus-install.sh ; fi;
 
 # Install SAML (uncomment if wanted)
-# RUN pip install python3-saml
-# RUN pip install social-auth-core[saml]
+RUN if $ENABLE_SAML; then pip install python3-saml ; fi;
+RUN if $ENABLE_SAML; then pip install social-auth-core[saml] ; fi;
 
 ################################################################################
 # BASE
@@ -75,8 +81,10 @@ RUN apt-get autoremove -y
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Install crontab to setup job
+# Install crontab to setup jobs
 RUN echo "0 0 * * * /usr/bin/python /code/manage.py generate_tree" >> /code/cronjob
+RUN echo "0 * * * Mon /usr/bin/python /code/manage.py reset_container_limits" >> /code/cronjob
+RUN echo "0 1 * * * /bin/bash /code/scripts/backup_db.sh" >> /code/cronjob
 RUN crontab /code/cronjob
 RUN rm /code/cronjob
 
