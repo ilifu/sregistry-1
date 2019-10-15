@@ -8,16 +8,15 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 '''
 
-from shub.apps.main.models import (
-    Container, 
-    Collection
+from shub.apps.main.models import Container
+from shub.settings import (
+    VIEW_RATE_LIMIT as rl_rate, 
+    VIEW_RATE_LIMIT_BLOCK as rl_block
 )
 
 from taggit.models import Tag
 
 from django.shortcuts import (
-    get_object_or_404, 
-    render_to_response, 
     render, 
     redirect
 )
@@ -26,19 +25,11 @@ from django.http import JsonResponse
 from django.http.response import Http404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-
-import os
-import re
-import uuid
+from ratelimit.decorators import ratelimit
 
 from .containers import get_container
 
-
-
-
-#### GETS #############################################################
-
-def get_tag(name=None,tid=None):
+def get_tag(name=None, tid=None):
 
     keyargs = dict()
     if name is not None:
@@ -54,46 +45,47 @@ def get_tag(name=None,tid=None):
         return tag
 
 
-###############################################################################################
-# TAGS ########################################################################################
-###############################################################################################
+################################################################################
+# TAGS #########################################################################
+################################################################################
 
-
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 def all_tags(request):
     tags = Tag.objects.all()
     context = {"tags":tags}
     return render(request, 'tags/all_tags.html', context)
 
 
-# View containers for a tag
-def view_tag(request,tid):
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
+def view_tag(request, tid):
+    '''view containers for a tag'''
     try:
         tag = Tag.objects.get(id=tid)
     except:
-        messages.info(request,"This tag does not exist.")
+        messages.info(request, "This tag does not exist.")
         return redirect('all_tags')
 
     containers = Container.objects.filter(tags__name=tag,
                                           collection__private=False)
-    context = {"containers":containers,
-               "tag":tag }
+    context = {"containers": containers, "tag": tag}
 
     return render(request, 'tags/view_tag.html', context)
 
 
-#######################################################################################
+################################################################################
 # COLLECTION TAG MANAGEMENT
-#######################################################################################
+################################################################################
 
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 @login_required
-def add_tag(request,cid):
+def add_tag(request, cid):
     '''manually add a tag to the collection
     '''
     container = get_container(cid)
     edit_permission = container.collection.has_edit_permission(request)
 
     if edit_permission and request.method == "POST":
-        tag = request.POST.get("tag",None)
+        tag = request.POST.get("tag", None)
         if tag is not None:
             container.tags.add(tag.lower())
             container.save()
@@ -103,9 +95,9 @@ def add_tag(request,cid):
     return JsonResponse({"message":message})
 
 
-
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 @login_required
-def remove_tag(request,cid):
+def remove_tag(request, cid):
     '''remove a tag from a collection
     '''
     container = get_container(cid)
@@ -114,8 +106,8 @@ def remove_tag(request,cid):
     if edit_permission and request.method == "POST":
         tag = request.POST.get("tag", None)
         if tag is not None:
-            tags = [x for x in container.tags.all() if x.name==tag.lower()]
-            if len(tags) > 0:
+            tags = [x for x in container.tags.all() if x.name == tag.lower()]
+            if tags:
                 container.tags.remove(tag)
                 container.save()
 

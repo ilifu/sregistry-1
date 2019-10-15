@@ -4,12 +4,14 @@
 .*
 !/.gitignore
 __pycache__
+Gemfile.lock
 *.img
 sregistry
 _site
 
 # Other #
 #########
+*.json
 migrations/
 make_video.sh
 celerybeat-schedule.db

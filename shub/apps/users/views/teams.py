@@ -11,19 +11,27 @@ with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.shortcuts import render, redirect
+from django.http.response import Http404
 from django.http import (
     HttpResponseRedirect,
     JsonResponse
 )
 
-from shub.settings import USER_COLLECTIONS
+from ratelimit.decorators import ratelimit
 from shub.apps.users.forms import TeamForm
-from shub.apps.users.models import ( User, Team, MembershipInvite )
+from shub.apps.users.models import (
+    Team,
+    MembershipInvite
+)
 from shub.apps.users.permissions import ( 
     has_create_permission, 
     is_invite_valid 
 )
 from shub.apps.users.utils import get_user
+from shub.settings import (
+    VIEW_RATE_LIMIT as rl_rate, 
+    VIEW_RATE_LIMIT_BLOCK as rl_block
+)
 
 import uuid
 
@@ -51,12 +59,15 @@ def get_team(tid):
 ################################################################################
 
 
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 @login_required
 def edit_team(request, tid=None):
     '''edit_team is the view to edit an existing team, or create a new team.
-    :parma tid: the team id to edit or create. If none, indicates a new team
+
+       Parameters
+       ==========
+       tid: the team id to edit or create. If none, indicates a new team
     '''
- 
     if tid:
         team = get_team(tid)
         edit_permission = team.has_edit_permission(request)
@@ -99,6 +110,7 @@ def edit_team(request, tid=None):
     return redirect("teams")
 
 
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 def view_teams(request):
     '''view all teams (log in not required)
     :parma tid: the team id to edit or create. If none, indicates a new team
@@ -109,11 +121,12 @@ def view_teams(request):
     create_permission = has_create_permission(request)
 
     context = {"teams": teams,
-               "has_create_permission" : create_permission }
+               "has_create_permission" : create_permission}
 
     return render(request, "teams/all_teams.html", context)
 
 
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 @login_required
 def view_team(request, tid, code=None):
     '''view the details about a team
@@ -140,6 +153,7 @@ def view_team(request, tid, code=None):
 ################################################################################
 
 
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 @login_required
 def join_team(request, tid, code=None):
     '''add a user to a new team. If the team is open, he/she can join without
@@ -166,13 +180,12 @@ def join_team(request, tid, code=None):
                 messages.info(request, "This code is invalid to join this team.")
 
     if add_user:   
-
         if user not in team.get_members():
             team.members.add(user)
             team.save()
-            messages.info(request,"You have been added to team %s" %(team.name))
+            messages.info(request, "You have been added to team %s" % team.name)
         else:
-            messages.info(request,"You are already a member of %s" %(team.name))
+            messages.info(request, "You are already a member of %s" % team.name)
 
     return HttpResponseRedirect(team.get_absolute_url())
 
@@ -183,6 +196,7 @@ def join_team(request, tid, code=None):
 ################################################################################
 
 
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 @login_required
 def leave_team(request, tid):
     '''leave team is the view for a user to leave his or her team. A user
@@ -230,6 +244,7 @@ def _remove_owner(team, user):
     return team
 
 
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 @login_required
 def remove_member(request, tid, uid):
     '''remove a member from a team.
@@ -251,6 +266,7 @@ def remove_member(request, tid, uid):
     return JsonResponse({"message":message})
 
 
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 @login_required
 def remove_owner(request, tid, uid):
     '''remove a member from a team.
@@ -272,6 +288,7 @@ def remove_owner(request, tid, uid):
     return JsonResponse({"message":message})
 
 
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 @login_required
 def add_owner(request, tid, uid):
     '''promote a user to be owner of a team
@@ -294,6 +311,7 @@ def add_owner(request, tid, uid):
     return JsonResponse({"message":message})
 
 
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 @login_required
 def delete_team(request, tid):
     '''delete a team entirely, must be an owner
@@ -306,7 +324,7 @@ def delete_team(request, tid):
     team = get_team(tid)
 
     if request.user in team.owners.all():
-        messages.info(request,'%s has been deleted.' %team.name)
+        messages.info(request, '%s has been deleted.' % team.name)
         team.delete()
     else:
         messages.info(request, "You are not allowed to perform this action.")
@@ -314,6 +332,7 @@ def delete_team(request, tid):
     return redirect('teams')
 
 
+@ratelimit(key='ip', rate=rl_rate, block=rl_block)
 @login_required
 def generate_team_invite(request, tid):
     '''generate an invitation for a user, return to view.
